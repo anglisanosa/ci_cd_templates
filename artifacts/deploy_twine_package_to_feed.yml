@@ -4,34 +4,40 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 
+variables:
+  - name: feed_name
+    value: packages
+
 stages:
+  - stage: package_test
+    displayName: Execute unit testing and integration test for package deployment
+    jobs:
+      - job:
+        steps:
+          - script: echo generate test
 
-  - stage: integration_test
-    displayName: Execute integration tests
+  - stage: package_build_and_upload
+    displayName: Load package to Azure DevOps feed
+    jobs:
+      - job:
+        steps:
+          - script: pip install build twine
+            displayName: Install dependencies
+          - script: echo -e "[distutils]\nIndex-servers =\n    $(feed_name)\n[$(feed_name)]\nRepository=https://pkgs.dev.azure.com/$(System.CollectionId)/_packaging/$(feed_name)/pypi/upload/" > .pypirc
+            displayName: Generate .pypirc file
+          - task: TwineAuthenticate@1
+            displayName: Autenticate to feed $(feed_name)
+            inputs:
+              artifactFeed: $(feed_name)
+          - script: python setup.py sdist bdist_wheel
+            displayName: Generate package
+          - script: python -m twine upload -r $(feed_name) dist/*
+            displayName: Upload package
 
-  - stage: unit_testing
-    displayName: Execute unit testing
-
-  - stage: upload_package_with_twine
-    displayName: Load package too feed repo
-    steps:
-      - script: |
-          pip install build
-          pip install twine
-        displayName: 'Install build and twine'
-
-      - script: |
-          python -m build -w
-        displayName: 'Python build'
-
-      - task: TwineAuthenticate@1
-        inputs:
-          artifactFeed: <FEED_NAME>
-        displayName: 'Twine Authenticate'
-
-      - script: |
-          python -m twine upload -r <FEED_NAME> --config-file $(PYPIRC_PATH) dist/*.whl
-        displayName: 'Upload to feed'
-
-  - stage: generate_package_documentation
-    displayName: Generate Package Documentation
+  - stage: package_documentation
+    displayName: Generate package documentation
+    condition: onSuccess()
+    jobs:
+      - job:
+        steps:
+          - script: echo generate package documentation
