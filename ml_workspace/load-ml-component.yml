@@ -1,0 +1,55 @@
+stages:
+
+- stage: CodeTests
+  displayName: Code tests
+  condition: eq(variables['Build.Reason'], 'PullRequest')
+  jobs:
+  - job: CodeTests
+    steps:
+      - task: CmdLine@2
+        inputs:
+           script: echo 'hello im validating pipeline'
+          #  script: docker run -itv "$(Build.SourcesDirectory):/app" pocazureacr.azurecr.io/$(ImageRepository):$(Version) python /app/run_tests.py
+           failOnStderr: true
+
+- stage: UploadComponent
+  displayName: Upload Component to Machine Learning Workspace
+  condition: or(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+  jobs:
+    - job: PublishComponent
+      steps:
+        - task: CmdLine@2
+          displayName: Install svh_azure dependency
+          inputs:
+            script: pip install svh_azure~=1.0.1 --extra-index-url=$(ServiceSVHPackages)
+            
+        - task: CmdLine@2
+          displayName: Install mldesigner temporal vercion!!!!
+          inputs:
+            script: pip install mldesigner==0.1.0.b12 
+
+        - task: AzureCLI@2
+          displayName: Register component to ML studio
+          inputs:
+            azureSubscription: $(AzureConnectionService)
+            scriptLocation: inlineScript
+            scriptType: bash
+            addSpnToEnvironment: true
+            # failOnStandardError: true
+            inlineScript:
+              'python -m svh_azure load_component
+                      $(ComponentCommand)
+                      --workspace_name="$(WorkspaceName)"
+                      --subscription_id="$(SubscriptionID)"
+                      --resource_group="$(ResourceGroup)"
+                      --name="$(ComponentName)"
+                      --version=$(ComponentVersion)
+                      --desc="$(Description)"
+                      --display_name="$(DisplayName)"
+                      --tags="$(ComponentTags)"
+                      --is_deterministic=$(DeterministicComponent)
+                      --distribution="$(ComponentDistribution)"
+                      --resources="$(ComponentResources)"
+                      --src_code="$(Build.SourcesDirectory)/$(ComponentSourceCode)"
+                      --env_name="$(MLEnvironmentName)"
+                      --env_version="$(ComponentEnvVersion)"'

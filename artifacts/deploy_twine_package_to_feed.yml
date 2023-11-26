@@ -1,0 +1,35 @@
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+
+  - stage: integration_test
+    displayName: Execute integration tests
+
+  - stage: unit_testing
+    displayName: Execute unit testing
+
+  - stage: upload_package_with_twine
+    displayName: Load package too feed repo
+    steps:
+      - script: |
+          pip install build
+          pip install twine
+        displayName: 'Install build and twine'
+
+      - script: |
+          python -m build -w
+        displayName: 'Python build'
+
+      - task: TwineAuthenticate@1
+        inputs:
+          artifactFeed: <FEED_NAME>
+        displayName: 'Twine Authenticate'
+
+      - script: |
+          python -m twine upload -r <FEED_NAME> --config-file $(PYPIRC_PATH) dist/*.whl
+        displayName: 'Upload to feed'
+
+  - stage: generate_package_documentation
+    displayName: Generate Package Documentation

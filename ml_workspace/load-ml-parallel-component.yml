@@ -1,0 +1,64 @@
+stages:
+
+- stage: CodeTests
+  displayName: Code tests
+  condition: eq(variables['Build.Reason'], 'PullRequest')
+  jobs:
+  - job: CodeTests
+    steps:
+      - task: CmdLine@2
+        inputs:
+           script: echo 'hello im validating pipeline'
+          #  script: docker run -itv "$(Build.SourcesDirectory):/app" pocazureacr.azurecr.io/$(ImageRepository):$(Version) python /app/run_tests.py
+           failOnStderr: true
+
+- stage: UploadComponent
+  displayName: Upload Component to Machine Learning Workspace
+  condition: or(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+  jobs:
+    - job: PublishComponent
+      steps:
+        - task: CmdLine@2
+          displayName: Install svh_azure dependency
+          inputs:
+              script: pip install svh_azure~=1.0.1 --extra-index-url=$(ServiceSVHPackages)
+
+        - task: AzureCLI@2
+          displayName: Register component to ML studio
+          inputs:
+            azureSubscription: $(AzureConnectionService)
+            scriptLocation: inlineScript
+            scriptType: bash
+            addSpnToEnvironment: true
+            # failOnStandardError: true
+            inlineScript:
+              'python -m svh_azure load_parallel_component 
+                      $(ComponentCommand)
+                      --workspace_name="$(WorkspaceName)"
+                      --subscription_id="$(SubscriptionID)"
+                      --resource_group="$(ResourceGroup)"
+                      --name="$(ComponentName)"
+                      --version=$(ComponentVersion)
+                      --desc="$(Description)"
+                      --display_name="$(DisplayName)"
+                      --tags="$(ComponentTags)"
+                      --is_deterministic=$(DeterministicComponent)
+                      --resources="$(ComponentResources)"
+                      --src_code="$(Build.SourcesDirectory)/$(ComponentSourceCode)"
+                      --env_name="$(MLEnvironmentName)"
+                      --env_version="$(ComponentEnvVersion)"
+                      --mini_batch_size=$(MiniBatchSize)
+                      --instance_count=$(InstanceCount)
+                      --partition_keys="$(PartitionKeys)"
+                      --max_concurrency_per_instance=$(MaxConcurrencyPerInstance)
+                      --append_row_to=$(AppendRowTo)
+                      --mini_batch_error_threshold=$(MiniBatchErrorThreshold)
+                      --mini_batch_max_retries=$(MiniBatchMaxRetries)
+                      --mini_batch_timeout=$(MiniBatchTout)
+                      --item_error_threshold=$(ItemErrorThreshold)
+                      --logging_level=$(LoggingLevel)
+                      --allowed_failed_percent=$(AllowedFailedPercent)
+                      --task_overhead_timeout=$(TaskOverheadTout)
+                      --first_task_creation_timeout=$(FirstTaskCreationTout)
+                      --copy_logs_to_parent=$(CopyLogsToParent)
+                      --resource_monitor_interval=$(ResourceMonitorInterval)'

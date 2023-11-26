@@ -1,0 +1,31 @@
+stages:
+- stage: EnvironmentRegister
+
+  displayName: Register Image to ML Workspace
+  condition: not(or(failed(), canceled()))
+  jobs:
+    - job: Register_Environment
+      displayName: Register Environment
+      steps:
+
+      - task: AzureCLI@2
+        displayName: Install az extension
+        condition: succeeded()
+        inputs:
+          azureSubscription: $(AzureConnectionService)
+          scriptLocation: inlineScript
+          scriptType: bash
+          inlineScript: az extension add -n ml -y
+
+      - task: AzureCLI@2
+        displayName: Register workspace to ML studio
+        inputs:
+          azureSubscription: $(AzureConnectionService)
+          scriptLocation: inlineScript
+          scriptType: bash
+          inlineScript:  az ml environment create
+                            --name $(MLEnvironmentName)
+                            --version $(MLEnvironmentVersion)
+                            --image $(ContainerRegistryName).azurecr.io/$(ImageName):$(ImageTag)
+                            --resource-group $(ResourceGroup)
+                            --workspace-name $(WorkspaceName)

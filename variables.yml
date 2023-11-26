@@ -1,0 +1,100 @@
+variables:
+
+  - group: service-connections
+  - group: ml-workspace
+
+  #####################################
+  #        APP VARIABLES        #
+  #####################################
+  - name: AppServiceName
+    # ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+    #   value: $(AppServiceNamePro)
+    # ${{ else }}:
+    value: $(ProjectName)
+  #####################################
+  #        COMPONENT VARIABLES        #
+  #####################################
+  - name: ComponentName
+    ${{ if eq(variables['Build.Reason'], 'PullRequest')  }}:
+      value: $(ProjectName)
+    ${{ elseif in(variables['Build.SourceBranchName'], 'dev', 'develop') }}:
+      value: $(ProjectName)_dev
+    ${{ else }}:
+      value: $(ProjectName)_$(Build.SourceBranchName)
+
+  - name: ComponentVersion
+    ${{ if eq(variables['Build.Reason'], 'PullRequest')  }}:
+      value: $(Version)
+    ${{ else }}:
+      value: None
+
+  - name: ComponentEnvVersion
+    ${{ if eq(variables['Build.Reason'], 'PullRequest')  }}:
+      value: $(Version)
+    ${{ else }}:
+      value: latest
+
+  #####################################
+  #          DOCKER VARIABLES         #
+  #####################################
+  - name: DockerTarget
+    ${{ if eq(variables['Build.Reason'], 'PullRequest')  }}:
+      value: pro
+    ${{ elseif in(variables['Build.SourceBranchName'], 'dev', 'develop') }}:
+      value: dev
+    ${{ else }}:
+      value: feat
+
+  - name: ACRConnService
+    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+      value: $(ServiceACRPro)
+    ${{ else }}:
+      value: $(ServiceACRDev)
+
+  - name: ContainerRegistryName
+    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+      value: $(ContainerRegistryPRO)
+    ${{ else }}:
+      value: $(ContainerRegistryDEV)
+
+  - name: ImageName
+    value: $(ProjectName)
+
+  - name: ImageTag
+    ${{ if eq(variables['Build.Reason'], 'PullRequest')  }}:
+      value: $(Version)
+    ${{ elseif in(variables['Build.SourceBranchName'], 'dev', 'develop') }}:
+      value: $(Build.BuildNumber)
+    ${{ else }}:
+      value: $(Build.SourceBranchName)
+
+  #####################################
+  #          AZ ML VARIABLES          #
+  #####################################
+  - name: AzureConnectionService
+    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+      value: $(ServiceAzureMLPro)
+    ${{ else }}:
+      value: $(ServiceAzureMLDev)
+
+  - name: WorkspaceName
+    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+      value: $(MLWorkspacePro)
+    ${{ else }}:
+      value: $(MLWorkspacePre)
+
+  - name: MLEnvironmentName
+    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+      value: $(ProjectName)
+    ${{ elseif in(variables['Build.SourceBranchName'], 'dev', 'develop') }}:
+      value: $(ProjectName)-dev
+    ${{ else }}:
+      value: $(ProjectName)-feat
+
+  - name: MLEnvironmentVersion
+    ${{ if eq(variables['Build.Reason'], 'PullRequest')  }}:
+      value: $(Version)
+    ${{ elseif in(variables['Build.SourceBranchName'], 'dev', 'develop') }}:
+      value: $(Build.BuildNumber)
+    ${{ else }}:
+      value: $(Build.SourceBranchName)

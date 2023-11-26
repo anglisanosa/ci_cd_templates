@@ -1,0 +1,72 @@
+stages:
+- stage: IntegrationTests
+  displayName: Integration tests
+  condition: eq(variables['Build.Reason'], 'PullRequest')
+  jobs:
+  - job: Run_Tests
+    steps:
+      - task: CmdLine@2
+        inputs:
+           script: echo 'hello im validating pipeline'
+          #  script: docker run -itv "$(Build.SourcesDirectory):/app" pocazureacr.azurecr.io/$(ProjectName):$(Version) python /app/run_tests.py
+           failOnStderr: true
+
+- stage: BuildContainer
+  displayName: Build and push stage
+  condition: or(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+  jobs:
+  - job: Generate_Container
+    displayName: Generate Docker Container
+    steps:
+    - task: Docker@2
+      displayName: Build Docker Image
+      inputs:
+        command: build
+        containerRegistry: $(ACRConnService)
+        buildContext: $(Build.SourcesDirectory)
+        Dockerfile: $(Build.SourcesDirectory)/$(path_to_component)/.env/DockerFile
+        arguments: --build-arg INDEX_URL=$(ServiceSVHPackages)
+                   --target $(DockerTarget)
+        repository: $(ImageName)
+        tags: |
+          $(ImageTag)
+          latest
+
+    - task: Docker@2
+      displayName: Push Docker Image to ACR
+      inputs:
+        command: push
+        containerRegistry: $(ACRConnService)
+        repository: $(ImageName)
+        tags: $(ImageTag)
+      
+    - task: Docker@2
+      condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+      displayName: Push latest Docker Image to ACR
+      inputs:
+        command: push
+        containerRegistry: $(ACRConnService)
+        repository: $(ImageName)
+        tags: latest
+
+    - task: AzureCLI@2
+      displayName: delete dangling-untagged manifests
+      inputs:
+        azureSubscription: $(AzureConnectionService)
+        scriptLocation: inlineScript
+        scriptType: bash
+        inlineScript: |
+          az acr manifest list-metadata --registry $(ContainerRegistryDEV) --name $(ImageName) --query "[?tags[0]==null].digest" -o tsv | 
+          xargs -I% az acr repository delete --name $(ContainerRegistryDEV) --image $(ImageName)@% --yes
+
+    - task: AzureCLI@2
+      displayName: Protect repository from writting actions
+      condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+      inputs:
+        azureSubscription: $(AzureConnectionService)
+        scriptLocation: inlineScript
+        scriptType: bash
+        inlineScript: az acr repository update 
+                       --name $(ContainerRegistryName)
+                       --image $(ImageName):$(ImageTag)
+                       --write-enabled false

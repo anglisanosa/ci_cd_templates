@@ -1,0 +1,70 @@
+stages:
+- stage: RestartApp
+  displayName: Restart App
+  condition: or(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+  jobs:
+  - job: Restart_App
+    displayName: Restart App Service
+    condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+    # dependsOn: Generate_Image
+    steps:
+    - task: AzureAppServiceSettings@1
+      displayName: Env Variables as App Service Settings
+      inputs:
+        azureSubscription: $(AzureConnectionService)
+        appName: $(AppServiceName)
+        appSettings: |
+          [
+            
+            {
+              "name": "ProjectName",
+              "value": "$(ProjectName)",
+              "slotSetting": false
+            },
+            {
+              "name": "APP_CLIENT_ID",
+              "value": "$(APP_CLIENT_ID)",
+              "slotSetting": false
+            },
+            {
+              "name": "AZ_STORAGE_CONN_STRING",
+              "value": "$(AZ_STORAGE_CONN_STRING)",
+              "slotSetting": false
+            },
+            {
+              "name": "AZURE_CLIENT_ID",
+              "value": "$(AZURE_CLIENT_ID)",
+              "slotSetting": false
+            },
+            {
+              "name": "AZURE_CLIENT_SECRET",
+              "value": "$(AZURE_CLIENT_SECRET)",
+              "slotSetting": false
+            },
+            {
+              "name": "AZURE_TENANT_ID",
+              "value": "$(AZURE_TENANT_ID)",
+              "slotSetting": false
+            },
+            {
+              "name": "ML_WORKSPACE_NAME",
+              "value": "$(WorkspaceName)",
+              "slotSetting": false
+            },
+            {
+              "name": "AZ_RESOURCE_GROUP",
+              "value": "$(ResourceGroup)",
+              "slotSetting": false
+            },
+            {
+              "name": "AZ_SUBSCRIPTION_ID",
+              "value": "$(SubscriptionID)",
+              "slotSetting": false
+            }
+          ]
+
+    - task: AzureAppServiceManage@0
+      inputs:
+        azureSubscription: $(AzureConnectionService)
+        Action: 'Restart Azure App Service'
+        WebAppName: $(AppServiceName)

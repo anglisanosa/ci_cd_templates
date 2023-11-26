@@ -1,0 +1,50 @@
+stages:
+
+- stage: CodeTests
+  displayName: Code tests
+  condition: eq(variables['Build.Reason'], 'PullRequest')
+  jobs:
+  - job: CodeTests
+    steps:
+      - task: CmdLine@2
+        inputs:
+           script: echo 'hello im validating pipeline'
+          #  script: docker run -itv "$(Build.SourcesDirectory):/app" pocazureacr.azurecr.io/$(ImageRepository):$(Version) python /app/run_tests.py
+           failOnStderr: true
+
+- stage: UploadPipelineComponent
+  displayName: Upload Pipeline Component to Machine Learning Workspace
+  condition: or(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+  jobs:
+    - job: PublishComponent
+      steps:
+        - task: CmdLine@2
+          displayName: Install svh_azure dependency
+          inputs:
+            script: pip install svh_azure~=0.7.0 --extra-index-url=$(ServiceSVHPackages)
+
+        - task: PowerShell@2
+          displayName: Register os environment variables
+          inputs:
+            targetType: 'inline'
+            script: |
+              Write-Host "##vso[task.setvariable variable=ML_WORKSPACE_NAME;]$(WorkspaceName)"
+              Write-Host "##vso[task.setvariable variable=AZ_RESOURCE_GROUP;]$(ResourceGroup)"
+              Write-Host "##vso[task.setvariable variable=AZ_SUBSCRIPTION_ID;]$(SubscriptionID)"
+
+        - task: AzureCLI@2
+          displayName: Register pipeline component to ML studio
+          inputs:
+            azureSubscription: $(AzureConnectionService)
+            scriptLocation: inlineScript
+            scriptType: bash
+            addSpnToEnvironment: true
+            # failOnStandardError: true
+            inlineScript:
+              'python -m svh_azure load_pipeline
+                      $(ComponentCommand)
+                      --workspace_name="$(WorkspaceName)"
+                      --subscription_id="$(SubscriptionID)"
+                      --resource_group="$(ResourceGroup)"
+                      --config_file="$(Build.SourcesDirectory)/$(DeploymentConfig)"
+                      --src_code="$(Build.SourcesDirectory)/$(ComponentSourceCode)"'
