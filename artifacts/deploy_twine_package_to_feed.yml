@@ -7,6 +7,8 @@ pool:
 variables:
   - name: feed_name
     value: packages
+  - name: python_version
+    default: '3.7'
 
 stages:
   - stage: package_test
@@ -21,17 +23,23 @@ stages:
     jobs:
       - job:
         steps:
-          - script: pip install build twine
+          - task: UsePythonVersion@0
+            inputs:
+              addToPath: true
+              versionSpec: $(python_version)
+
+          - script: pip install wheel twine
             displayName: Install dependencies
-          - script: echo -e "[distutils]\nIndex-servers =\n    $(feed_name)\n[$(feed_name)]\nRepository=https://pkgs.dev.azure.com/$(System.CollectionId)/_packaging/$(feed_name)/pypi/upload/" > .pypirc
-            displayName: Generate .pypirc file
+
           - task: TwineAuthenticate@1
             displayName: Autenticate to feed $(feed_name)
             inputs:
               artifactFeed: $(feed_name)
-          - script: python setup.py sdist bdist_wheel
+
+          - script: python setup.py bdist_wheel
             displayName: Generate package
-          - script: python -m twine upload -r $(feed_name) dist/*
+
+          - script: python -m twine upload -r $(feed_name) --config-file $(PYPIRC_PATH) dist/*
             displayName: Upload package
 
   - stage: package_documentation
