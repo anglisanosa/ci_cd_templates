@@ -1,8 +1,13 @@
+
+
+
 parameters:
   - name: feed_name
     default: packages
+
+variables:
   - name: python_version
-    default: '3.7'
+    value: '3.7'
 
 stages:
   - stage: package_test
