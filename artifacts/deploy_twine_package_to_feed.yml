@@ -24,20 +24,20 @@ stages:
           - task: UsePythonVersion@0
             inputs:
               addToPath: true
-              versionSpec: $(python_version)
+              versionSpec: ${{ parameters.python_version }}
 
           - script: pip install wheel twine
             displayName: Install dependencies
 
           - task: TwineAuthenticate@1
-            displayName: Autenticate to feed $(feed_name)
+            displayName: Autenticate to feed ${{ feed_name }}
             inputs:
-              artifactFeed: $(feed_name)
+              artifactFeed: ${{ feed_name }}
 
           - script: python setup.py bdist_wheel
             displayName: Generate package
 
-          - script: python -m twine upload -r $(feed_name) --config-file $(PYPIRC_PATH) dist/*
+          - script: python -m twine upload -r ${{ feed_name }} --config-file $(PYPIRC_PATH) dist/*
             displayName: Upload package
 
   - stage: package_documentation
