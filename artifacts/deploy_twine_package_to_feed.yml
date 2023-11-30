@@ -1,9 +1,6 @@
-trigger:
-  none
-
-variables:
+parameters:
   - name: feed_name
-    value: packages
+    default: packages
   - name: python_version
     default: '3.7'
 
