@@ -1,12 +1,15 @@
 
 
-
 parameters:
   - name: feed_name
     default: packages
   - name: python_version
     default: '3.7'
 
+
+pool: 
+   agent: Default
+  
 stages:
   - stage: package_test
     displayName: Execute unit testing and integration test for package deployment
