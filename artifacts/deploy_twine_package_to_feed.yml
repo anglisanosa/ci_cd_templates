@@ -14,7 +14,7 @@ stages:
 
   - stage: package_build_and_upload
     displayName: Load package to Azure DevOps feed
-    condition: onSuccess()
+    condition: succeeded()
     jobs:
       - job:
         steps:
@@ -39,7 +39,7 @@ stages:
 
   - stage: package_documentation
     displayName: Generate package documentation
-    condition: onSuccess()
+    condition: succeeded()
     jobs:
       - job:
         steps:
