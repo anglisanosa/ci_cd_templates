@@ -1,0 +1,48 @@
+
+
+parameters:
+  - name: python_version
+    default: '3.7'
+
+stages:
+  - stage: package_test
+    displayName: Execute unit testing and integration test for package deployment
+    jobs:
+      - job:
+        strategy:
+          matrix:
+            ${{ if eq(parameters.python_version, '3.7') }}:
+              Python37:
+                python.version: '3.7'
+            ${{ if or(eq(parameters.python_version, '3.7'), eq(parameters.python_version, '3.8')) }}:
+              Python38:
+                python.version: '3.8'
+            Python39:
+              python.version: '3.9'
+
+        steps:
+
+          - task: UsePythonVersion@0
+            inputs:
+              addToPath: true
+              versionSpec: $(python.version)
+
+          - script: pip install tox
+            displayName: Install dependencies
+
+          - script: tox -e py
+            displayName: Running testing on multiple test environments
+
+          - task: PublishTestResults@2
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFiles: 'junit/test-results.xml'
+              testRunTitle: '$(Build.Repository.Name)-$(python.version)'
+              failTaskOnFailedTests: true
+              mergeTestResults: true
+
+          - task: PublishCodeCoverageResults@1
+            inputs:
+              codeCoverageTool: Cobertura
+              summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
+              reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
