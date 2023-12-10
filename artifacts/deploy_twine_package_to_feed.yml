@@ -11,8 +11,43 @@ stages:
     displayName: Execute unit testing and integration test for package deployment
     jobs:
       - job:
+        strategy:
+          matrix:
+            ${{ if eq(parameters.python_version, '3.7') }}:
+              Python37:
+                python.version: '3.7'
+            ${{ if or(eq(parameters.python_version, '3.7'), eq(parameters.python_version, '3.8')) }}:
+              Python38:
+                python.version: '3.8'
+            Python39:
+              python.version: '3.9'
+
         steps:
-          - script: echo generate test
+
+          - task: UsePythonVersion@0
+            inputs:
+              addToPath: true
+              versionSpec: $(python.version)
+
+          - script: pip install tox
+            displayName: Install dependencies
+
+          - script: tox -e py
+            displayName: Running testing on multiple test environments
+
+          - task: PublishTestResults@2
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFiles: 'junit/test-results.xml'
+              testRunTitle: '$(Build.Repository.Name)-$(python.version)'
+              failTaskOnFailedTests: true
+              mergeTestResults: true
+
+          - task: PublishCodeCoverageResults@1
+            inputs:
+              codeCoverageTool: Cobertura
+              summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
+
 
   - stage: package_build_and_upload
     displayName: Load package to Azure DevOps feed
@@ -25,7 +60,7 @@ stages:
               addToPath: true
               versionSpec: ${{ parameters.python_version }}
 
-          - script: pip install wheel twine
+          - script: pip install build twine
             displayName: Install dependencies
 
           - task: TwineAuthenticate@1
@@ -33,10 +68,10 @@ stages:
             inputs:
               artifactFeed: ${{ parameters.feed_name }}
 
-          - script: python setup.py bdist_wheel
+          - script: python -m build -w
             displayName: Generate package
 
-          - script: python -m twine upload -r ${{ parameters.feed_name }} --config-file $(PYPIRC_PATH) dist/*
+          - script: python -m twine upload -r ${{ parameters.feed_name }} --config-file $(PYPIRC_PATH) dist/*.whl
             displayName: Upload package
 
   - stage: package_documentation
@@ -45,4 +80,18 @@ stages:
     jobs:
       - job:
         steps:
-          - script: echo generate package documentation
+          - task: UsePythonVersion@0
+            inputs:
+              addToPath: true
+              versionSpec: '3.7'
+
+          - script: pip install sphinx sphinx_rtd_theme sphinx-copybuttons phinx-multiversion
+            displayName: Install dependencies
+
+          - script: sphinx-build docs/source docs/_build
+            displayName: Make sphinx documentation
+
+#          - task: AzureStaticWebApp@0
+#            inputs:
+#              app_location: "/docs/_build/html"
+#              azure_static_web_apps_api_token: $(DEPLOYMENT_TOKEN)
