@@ -8,14 +8,14 @@
 
 name: Deploy pypi package
 
-on: 
+on: [push, pull_request]
   # workflow_dispatch:
   # release:
   #   types: [published]
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  # push:
+  #   branches: [ "main" ]
+  # pull_request:
+  #   branches: [ "main" ]
   
     
 
