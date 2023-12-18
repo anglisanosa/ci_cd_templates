@@ -37,6 +37,6 @@ jobs:
     #   run: |
     #     pip install -r requirements.txt --no-dependencies
     - name: Build package
-      run: python setup.py bdist_wheel
+      run: python -m build -w
     - name: Publish package
       run: python -m twine upload dist/* --username __token__ --password ${{ secrets.PYPI_API_TOKEN }} --non-interactive --verbose
