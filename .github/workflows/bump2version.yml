@@ -67,6 +67,6 @@ jobs:
           - name: list branches
             run: git branch -a
           - name: a
-            run: git rebase remotes/origin/main
+            run: git rebase main
           - name: b
             run:  git push origin HEAD:develop -f
