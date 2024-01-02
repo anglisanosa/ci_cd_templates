@@ -70,3 +70,10 @@ jobs:
             run: git rebase refs/heads/main
           - name: b
             run:  git push origin HEAD:develop -f
+          - name: chekout and rebaase
+            run: |
+            git fetch origin &&
+            git pull --all &&
+            git checkout remotes/origin/develop &&
+            git pull --rebase origin main  &&
+            git push origin HEAD:develop -f
