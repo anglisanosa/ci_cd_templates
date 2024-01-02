@@ -59,6 +59,11 @@ jobs:
           - name: Push changes with tags
             run: git push && git push --tags
 
+          - name: test
+            run: |
+              git branch -a &&
+              git checkout -b develop origin/develop
+              
           - name: rebase develop
             run: |
               git checkout origin/develop &&
