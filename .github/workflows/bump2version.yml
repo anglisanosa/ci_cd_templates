@@ -63,6 +63,6 @@ jobs:
             run: |
               git fetch origin &&
               git pull --all &&
-              git checkout develop &&
+              git checkout remotes/origin/develop &&
               git rebase origin/main &&
               git push origin HEAD:develop -f
