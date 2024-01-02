@@ -64,4 +64,4 @@ jobs:
               git fetch origin &&
               git checkout remotes/origin/develop &&
               git rebase origin/main &&
-              git push 
+              git push origin HEAD:develop
