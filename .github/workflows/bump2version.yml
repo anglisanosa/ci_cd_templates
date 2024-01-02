@@ -62,6 +62,8 @@ jobs:
           - name: rebase develop
             run: |
               git fetch origin &&
-              git checkout remotes/origin/develop &&
+              git checkout develop &&
+              git branch -D develop &&
+              git checkout -b develop origin/develop &&
               git rebase origin/main &&
               git push origin HEAD:develop
