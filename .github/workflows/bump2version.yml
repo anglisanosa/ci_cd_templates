@@ -61,7 +61,7 @@ jobs:
 
           - name: rebase develop
             run: |
-              git checkout develop
+              git checkout refs/heads/develop
               git pull
-              git rebase main
+              git rebase refs/heads/main
               git push
