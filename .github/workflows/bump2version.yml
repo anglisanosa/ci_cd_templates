@@ -64,6 +64,8 @@ jobs:
               git fetch origin &&
               git pull --all &&
               git checkout remotes/origin/develop
+          - name: list branches
+            run: git branch -a
           - name: a
             run: git rebase remotes/origin/main
           - name: b
