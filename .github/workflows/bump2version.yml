@@ -1,0 +1,60 @@
+name: bump 2 next version
+on:
+    workflow_call:
+        inputs:
+            version_name:
+              description: 'Version to deploy'
+              required: true
+              type: string
+              default: 'patch'
+            #   options:
+            #     - 'patch'
+            #     - 'minor'
+            #     - 'major'
+        secrets:
+            GITHUB_TOKEN:
+              required: true
+              description: 'The GitHub token for the repository.'
+
+permissions:
+    contents: write
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout repository
+            uses: actions/checkout@v2
+            
+          - name: Abort if not main
+            if: github.ref != 'refs/heads/main'
+            run: exit 78
+
+          - name: Bump Version
+            id: bump_version
+            run: |
+              pip install bumpversion
+    
+          - name: Store new version number
+            run: echo "version_number=`bumpversion --dry-run --list ${{ github.event.inputs.version_name }} | grep new_version | sed -r s,"^.*=",,`" >> $GITHUB_ENV
+          
+          - name: Display new version number
+            run: |
+              echo "version_name: ${{ github.event.inputs.version_name }}"
+              echo "version_number: v${{ env.version_number }}"
+
+          - name: Commit CHANGELOG updates
+            run: |
+              git config --global user.email "git@github.com"
+              git config --global user.name "GitHub Bot"
+    
+          - name: Run bumpversion
+            run: bumpversion ${{ github.event.inputs.version_name }} --verbose
+    
+          - name: Ensure tag creation
+            run: git tag | grep ${{ env.version_number }}
+    
+          - name: Ensure tag creation
+            run: git tag | grep ${{ env.version_number }}
+          - name: Push changes with tags
+            run: git push && git push --tags
