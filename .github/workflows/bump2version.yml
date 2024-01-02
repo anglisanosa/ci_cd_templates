@@ -65,4 +65,4 @@ jobs:
               git pull --all &&
               git checkout develop &&
               git rebase origin/main &&
-              git push origin HEAD:develop
+              git push origin HEAD:develop -f
