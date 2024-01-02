@@ -11,10 +11,10 @@ on:
             #     - 'patch'
             #     - 'minor'
             #     - 'major'
-        secrets:
-            GITHUB_TOKEN:
-              required: true
-              description: 'The GitHub token for the repository.'
+        # secrets:
+        #     GITHUB_TOKEN:
+        #       required: true
+        #       description: 'The GitHub token for the repository.'
 
 permissions:
     contents: write
