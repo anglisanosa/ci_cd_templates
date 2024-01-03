@@ -26,8 +26,10 @@ jobs:
         id: set_python
         run: |
           python_environments=$(echo "${{ github.event.inputs.python_environments }}" | jq -r '.[]')
-          echo "::set-output name=python_environments::${python_environments}"
-
+          echo "python_environments=${python_environments}" >> $GITHUB_ENV
+      - name: print python environments
+        run: |
+          echo "${{ steps.set_python.outputs.python_environments }}"
 
   build:
     runs-on: ubuntu-latest
