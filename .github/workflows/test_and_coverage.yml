@@ -33,18 +33,17 @@ jobs:
     needs: pyhon_matrix
     strategy:
       matrix:
-        python_versions: [3.8,3.9]
-#${{ fromJson(needs.pyhon_matrix.outputs.python_versions) }}
+        python_versions: ${{ fromJson(needs.pyhon_matrix.outputs.python_versions) }}
     
-    name: Test and coverage with python version ${{ matrix.python_version }}
+    name: Test and coverage with python version ${{ matrix.python_versions }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
   
-      - name: Set up Python ${{ matrix.python_version }}
+      - name: Set up Python ${{ matrix.python_versions }}
         uses: actions/setup-python@v3
         with:
-          python-version: ${{ matrix.python_version }}
+          python-version: ${{ matrix.python_versions }}
 
       - name: print python version
         run: python --version
