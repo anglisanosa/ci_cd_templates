@@ -28,35 +28,13 @@ jobs:
           python_versions=$(echo '${{ inputs.python_environments }}' | jq -c)
           echo "python_versions=${python_versions}" >> $GITHUB_OUTPUT
 
-  #     - name: print python versions
-  #       run: |
-  #         echo "${{ steps.set_python.outputs.python_versions }}"
-
-  #     - name: print python environments
-  #       run: |
-  #         echo "${{ inputs.python_environments }}"
-
-  #     - name: print fromJson
-  #       run: |
-  #         echo "${{ fromJson(steps.set_python.outputs.python_versions) }}"
-
-  # aditional_free_job:
-  #   runs-on: ubuntu-latest
-  #   needs: pyhon_matrix
-  #   steps:
-  #     - name: print python versions
-  #       run: |
-  #           echo "${{ needs.pyhon_matrix.outputs.python_versions }}"
-  #     - name: print fromJson
-  #       run: |
-  #         echo "${{ fromJson(needs.pyhon_matrix.outputs.python_versions) }}"
-
   build:
     runs-on: ubuntu-latest
     needs: pyhon_matrix
     strategy:
       matrix:
-        python_versions: ${{ fromJson(needs.pyhon_matrix.outputs.python_versions) }}
+        python_versions: [3.8,3.9]
+#${{ fromJson(needs.pyhon_matrix.outputs.python_versions) }}
     
     name: Test and coverage with python version ${{ matrix.python_version }}
     steps:
