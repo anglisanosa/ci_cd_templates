@@ -1,0 +1,57 @@
+################################################################################
+# This pipeline will generate a python package and its documentation and
+# will deploy it to devops feed and static web repectly
+# Deployment will be produced by user action (manual trigger).
+################################################################################
+trigger:
+  none
+
+parameters:
+  - name: version
+    displayName: "One of major, minor, or patch"
+    default: patch
+    type: string
+    values:
+      - major
+      - minor
+      - patch
+
+  - name: agent
+    displayName: "Select agent to run"
+    default: pro
+    type: string
+    values:
+      - pro
+      - dev
+
+################################################################################
+# Production agent pool
+################################################################################
+
+#  pool:
+#    vmImage: 'ubuntu-latest'
+
+################################################################################
+# Develop agent pool
+################################################################################
+
+pool:
+  name: 'Default'
+  demands:
+    - agent.name -equals linux-ubuntu18.04
+
+
+resources:
+  repositories:
+    - repository: pkg_deployment
+      type: git
+      name: ci_cd_templates/ci_cd_templates
+
+stages:
+
+  - template: artifacts/deploy_py_package_to_feed.yml@pkg_deployment
+    parameters:
+      python_version: 3.8
+      
+      version: ${{ parameters.version }}
+      
