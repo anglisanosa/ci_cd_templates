@@ -58,7 +58,7 @@ jobs:
       matrix:
         python_versions: ${{ fromJson(needs.pyhon_matrix.outputs.python_versions) }}
     
-    name: Execute unit testing and integration test for package deployment Python ${{ matrix.python_version }}
+    name: Test and coverage with python version ${{ matrix.python_version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -67,7 +67,10 @@ jobs:
         uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python_version }}
-  
+
+      - name: print python version
+        run: python --version
+        
       - name: Install dependencies
         run: |
           python -m pip install tox
