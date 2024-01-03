@@ -25,14 +25,14 @@ jobs:
       - name: set python environments
         id: set_python
         run: |
-          python_versions=$(echo "${{ github.event.inputs.python_environments }}" | jq -r '.[]')
+          python_versions=$(echo "${{ inputs.python_environments }}" | jq -r '.[]')
           echo "python_versions=${python_versions}" >> $GITHUB_ENV
       - name: print python versions
         run: |
           echo "${{ steps.set_python.outputs.python_versions }}"
       - name: print python environments
         run: |
-          echo "${{ github.event.inputs.python_environments }}"
+          echo "${{ inputs.python_environments }}"
 
   build:
     runs-on: ubuntu-latest
