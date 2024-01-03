@@ -30,12 +30,15 @@ jobs:
       - name: print python versions
         run: |
           echo "${{ steps.set_python.outputs.python_versions }}"
+      - name: print python versions from env
+        run: |
+          echo "${{ env.python_versions }}"
       - name: print python environments
         run: |
           echo "${{ inputs.python_environments }}"
-      - name: print fromjson directly
-        run: |
-          echo "${{ fromJson('${{ inputs.python_environments }}') }}"
+      # - name: print fromjson directly
+      #   run: |
+      #     echo "${{ fromJson('${{ inputs.python_environments }}') }}"
       - name: print fromJson
         run: |
           echo "${{ fromJson(steps.set_python.outputs.python_versions) }}"
