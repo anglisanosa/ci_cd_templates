@@ -33,13 +33,20 @@ jobs:
       - name: print python environments
         run: |
           echo "${{ inputs.python_environments }}"
+      - name: print fromjson directly
+        run: |
+          echo "${{ fromJson('${{ inputs.python_environments }}') }}"
+      - name: print fromJson
+        run: |
+          echo "${{ fromJson(steps.set_python.outputs.python_versions) }}"
+
 
   build:
     runs-on: ubuntu-latest
     needs: pyhon_matrix
     strategy:
       matrix:
-        python_versions: ${{ fromJson(needs.pyhon_matrix.outputs.python_environments) }}
+        python_versions: ${{ fromJson(needs.pyhon_matrix.outputs.python_versions) }}
     
     name: Execute unit testing and integration test for package deployment Python ${{ matrix.python_version }}
     steps:
