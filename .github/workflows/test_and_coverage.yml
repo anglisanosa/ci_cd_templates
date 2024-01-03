@@ -16,11 +16,25 @@ permissions:
   pull-requests: write
 
 jobs:
+  pyhon_matrix:
+    runs-on: ubuntu-latest
+    name: generate the list of python environments
+    outputs:
+      python_environments: ${{ steps.set_python.outputs.python_environments }}
+    steps:
+      - name: set python environments
+        id: set_python
+        run: |
+          python_environments=$(echo "${{ github.event.inputs.python_environments }}" | jq -r '.[]')
+          echo "::set-output name=python_environments::${python_environments}"
+
+
   build:
     runs-on: ubuntu-latest
+    needs: pyhon_matrix
     strategy:
       matrix:
-        python_versions: ${{ fromJson(github.event.inputs.python_environments) }}
+        python_versions: ${{ fromJson(needs.pyhon_matrix.outputs.python_environments) }}
     
     name: Execute unit testing and integration test for package deployment Python ${{ matrix.python_version }}
     steps:
