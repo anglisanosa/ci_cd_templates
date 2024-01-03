@@ -25,7 +25,7 @@ jobs:
       - name: set python environments
         id: set_python
         run: |
-          python_versions=$(echo '${{ inputs.python_environments }}' | jq -r '.[]')
+          python_versions=$(echo '${{ inputs.python_environments }}' | jq -r '.[]' | tr '\n' ' ')
           echo "python_versions=${python_versions}" >> $GITHUB_ENV
       - name: print python versions
         run: |
