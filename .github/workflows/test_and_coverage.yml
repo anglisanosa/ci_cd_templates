@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     name: generate the list of python environments
     outputs:
-      python_versions: ${{ steps.set_python.outputs.python_environments }}
+      python_versions: ${{ steps.set_python.outputs.python_versions }}
       outputs1: ${{ steps.step1.outputs.outputs1 }}
     steps:
       - id: step1
