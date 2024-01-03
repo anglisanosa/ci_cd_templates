@@ -59,10 +59,21 @@ jobs:
           - name: Push changes with tags
             run: git push && git push --tags
 
-          - name: rebase develop
+        #   - name: rebase develop
+        #     run: |
+        #       git fetch origin &&
+        #       git pull --all &&
+        #       git checkout remotes/origin/develop
+        #   - name: list branches
+        #     run: git branch -a
+        #   - name: a
+        #     run: git rebase refs/heads/main
+        #   - name: b
+        #     run:  git push origin HEAD:develop -f
+          - name: chekout and rebaase
             run: |
-              git fetch origin &&
-              git pull --all &&
-              git checkout remotes/origin/develop &&
-              git rebase origin/main &&
-              git push origin HEAD:develop -f
+                git fetch origin &&
+                git pull --all &&
+                git checkout remotes/origin/develop &&
+                git pull --rebase origin main  &&
+                git push origin HEAD:develop -f

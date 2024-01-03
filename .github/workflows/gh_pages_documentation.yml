@@ -3,7 +3,7 @@ name: documentation
 on:
     workflow_call:
         secrets:
-            GITHUB_TOKEN1:
+            github_token:
               required: true
               description: 'The GitHub token for the repository.'
 
@@ -29,6 +29,6 @@ jobs:
           uses: peaceiris/actions-gh-pages@v3
           with:
             publish_branch: gh-pages
-            github_token: ${{ secrets.GITHUB_TOKEN1 }}
+            github_token: ${{ secrets.github_token }}
             publish_dir: _build/
             force_orphan: true
