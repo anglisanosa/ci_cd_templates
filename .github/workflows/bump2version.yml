@@ -63,7 +63,7 @@ jobs:
             run: |
               git fetch origin develop &&
               git checkout -b develop origin/develop  &&
-              git merge -X theirs --no-ff remotes/origin/main -m "Merge changes from main into develop"  &&
+              git merge --allow-unrelated-histories -X theirs --no-ff remotes/origin/main -m "Merge changes from main into develop"  &&
               git push origin develop
         #   - name: rebase develop
         #     run: |
