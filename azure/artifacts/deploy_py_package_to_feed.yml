@@ -1,55 +1,79 @@
-
-
 parameters:
   - name: feed_name
     default: packages
   - name: python_version
     default: '3.7'
+  - name: version
+    default: patch
 
-stages:
-  - stage: package_build_and_upload
+
+jobs:
+  - job: package_build_and_upload
     displayName: Load package to Azure DevOps feed
+    steps:
+      - checkout: self
+        persistCredentials: true
+
+      - task: UsePythonVersion@0
+        inputs:
+          addToPath: true
+          versionSpec: ${{ parameters.python_version }}
+
+      - script: pip install build twine bump2version
+        displayName: Install dependencies
+
+      - script: bumpversion ${{ parameters.version }}
+        displayName: Bumping new version
+
+      - task: TwineAuthenticate@1
+        displayName: Autenticate to feed ${{ parameters.feed_name }}
+        inputs:
+          artifactFeed: ${{ parameters.feed_name }}
+
+      - script: python -m build -w
+        displayName: Generate package
+
+      - script: python -m twine upload -r ${{ parameters.feed_name }} --config-file $(PYPIRC_PATH) dist/*.whl
+        displayName: Upload package
+
+      - bash: |
+          RELEASE_VERSION=$(bumpversion --dry-run --allow-dirty --list ${{ parameters.version }} | grep current_version | sed -r s,"^.*=",,) && 
+          echo "##vso[task.setvariable variable=version_number]$RELEASE_VERSION"
+        displayName: Getting new version number
+
+      - script: |
+          git config --global user.email "$(Build.RequestedForEmail)" && 
+          git config --global user.name "$(Build.RequestedFor)" && 
+          git add . &&
+          git commit -m "New Release v$(version_number)"
+        displayName: Commit changes for version
+
+      - script: |
+          git tag v$(version_number) && git push origin HEAD:master --tags
+        displayName: Generating tag for new release and make push to master
+
+      - script: |
+          git checkout remotes/origin/develop &&
+          git rebase origin/master && 
+          git push origin HEAD:develop
+        displayName: Rebase develop branch onto master with new version bumped
+
+  - job: package_documentation
     condition: succeeded()
-    jobs:
-      - job:
-        steps:
-          - task: UsePythonVersion@0
-            inputs:
-              addToPath: true
-              versionSpec: ${{ parameters.python_version }}
-
-          - script: pip install build twine
-            displayName: Install dependencies
-
-          - task: TwineAuthenticate@1
-            displayName: Autenticate to feed ${{ parameters.feed_name }}
-            inputs:
-              artifactFeed: ${{ parameters.feed_name }}
-
-          - script: python -m build -w
-            displayName: Generate package
-
-          - script: python -m twine upload -r ${{ parameters.feed_name }} --config-file $(PYPIRC_PATH) dist/*.whl
-            displayName: Upload package
-
-  - stage: package_documentation
     displayName: Generate package documentation
-    condition: succeeded()
-    jobs:
-      - job:
-        steps:
-          - task: UsePythonVersion@0
-            inputs:
-              addToPath: true
-              versionSpec: '3.7'
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          addToPath: true
+          versionSpec: '3.7'
 
-          - script: pip install sphinx sphinx_rtd_theme sphinx-copybuttons phinx-multiversion
-            displayName: Install dependencies
+      - script: pip install sphinx sphinx_rtd_theme sphinx-copybuttons sphinx-multiversion
+        displayName: Install dependencies
 
-          - script: sphinx-build docs/source docs/_build
-            displayName: Make sphinx documentation
+      - script: sphinx-build docs/source docs/_build
+        displayName: Make sphinx documentation
 
-#          - task: AzureStaticWebApp@0
-#            inputs:
-#              app_location: "/docs/_build/html"
-#              azure_static_web_apps_api_token: $(DEPLOYMENT_TOKEN)
+      - task: AzureStaticWebApp@0
+        inputs:
+          app_location: "/docs/_build/html"
+          azure_static_web_apps_api_token: $(DEPLOYMENT_TOKEN)
